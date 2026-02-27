@@ -287,40 +287,46 @@ export function App() {
             Cestino: Elimina Selezionate
           </button>
         </div>
-        <div className="gallery">
-          {images.map((img) => (
-            <article key={img.name} className="card">
-              <div className="cardTools">
-                <button
-                  type="button"
-                  className="toolBtn"
-                  title="Seleziona"
-                  onClick={() => toggleSelectImage(img.name)}
-                >
-                  {selectedImages.includes(img.name) ? '[v]' : '[ ]'}
-                </button>
-                <button
-                  type="button"
-                  className="toolBtn deleteOne"
-                  title="Elimina immagine"
-                  disabled={deleting}
-                  onClick={() => deleteSingleImage(img.name)}
-                >
-                  [x]
-                </button>
-              </div>
-              <img
-                src={img.url}
-                alt={img.name}
-                loading="lazy"
-                onDoubleClick={() => setPreviewImage(img)}
-              />
-              <div className="meta">
-                <p title={img.name}>{img.name}</p>
-                <small>{formatBytes(img.sizeBytes)}</small>
-              </div>
-            </article>
-          ))}
+        <div className="galleryViewport">
+          <div className="gallery">
+            {images.map((img, index) => {
+              const mod = index % 11;
+              const variant = mod === 0 ? 'bento-hero' : mod === 3 || mod === 7 ? 'bento-wide' : mod === 5 || mod === 9 ? 'bento-tall' : '';
+              return (
+                <article key={img.name} className={`card ${variant}`.trim()}>
+                  <div className="cardTools">
+                    <button
+                      type="button"
+                      className="toolBtn"
+                      title="Seleziona"
+                      onClick={() => toggleSelectImage(img.name)}
+                    >
+                      {selectedImages.includes(img.name) ? '[v]' : '[ ]'}
+                    </button>
+                    <button
+                      type="button"
+                      className="toolBtn deleteOne"
+                      title="Elimina immagine"
+                      disabled={deleting}
+                      onClick={() => deleteSingleImage(img.name)}
+                    >
+                      [x]
+                    </button>
+                  </div>
+                  <img
+                    src={img.url}
+                    alt={img.name}
+                    loading="lazy"
+                    onDoubleClick={() => setPreviewImage(img)}
+                  />
+                  <div className="meta">
+                    <p title={img.name}>{img.name}</p>
+                    <small>{formatBytes(img.sizeBytes)}</small>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </div>
       </section>
 

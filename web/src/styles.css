@@ -151,9 +151,17 @@ pre {
   font-size: 12px;
 }
 
+.galleryViewport {
+  max-height: 72vh;
+  overflow: auto;
+  padding-right: 6px;
+}
+
 .gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  grid-auto-rows: 8px;
+  grid-auto-flow: dense;
   gap: 12px;
 }
 
@@ -177,6 +185,21 @@ pre {
   border-radius: 10px;
   background: #fff;
   overflow: hidden;
+  grid-row: span 34;
+}
+
+.card.bento-wide {
+  grid-column: span 2;
+  grid-row: span 34;
+}
+
+.card.bento-tall {
+  grid-row: span 46;
+}
+
+.card.bento-hero {
+  grid-column: span 2;
+  grid-row: span 50;
 }
 
 .cardTools {
@@ -207,7 +230,7 @@ pre {
 
 .card img {
   width: 100%;
-  height: 160px;
+  height: calc(100% - 48px);
   object-fit: cover;
   display: block;
   cursor: zoom-in;
@@ -215,6 +238,7 @@ pre {
 
 .meta {
   padding: 8px;
+  height: 48px;
 }
 
 .meta p {
@@ -271,4 +295,15 @@ pre {
   display: block;
   border-radius: 8px;
   border: 1px solid var(--line);
+}
+
+@media (max-width: 720px) {
+  .galleryViewport {
+    max-height: 62vh;
+  }
+
+  .card.bento-wide,
+  .card.bento-hero {
+    grid-column: span 1;
+  }
 }

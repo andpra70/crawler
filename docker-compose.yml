@@ -1,0 +1,13 @@
+services:
+  crawler-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crawler-ui
+    environment:
+      API_PORT: "6065"
+    ports:
+      - "6064:6064"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

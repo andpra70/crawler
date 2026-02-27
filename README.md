@@ -14,6 +14,24 @@ Crawler Node.js che:
 npm install
 ```
 
+## Avvio con Docker Compose (porta 6064)
+```bash
+docker compose up --build
+```
+
+UI disponibile su:
+- `http://localhost:6064`
+
+Per avvio in background:
+```bash
+docker compose up --build -d
+```
+
+Stop:
+```bash
+docker compose down
+```
+
 ## Avvio Web App (porta 6064)
 ```bash
 npm run dev
