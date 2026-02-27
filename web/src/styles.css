@@ -1,0 +1,274 @@
+:root {
+  color-scheme: light;
+  --bg: #f6efe6;
+  --panel: #fffaf3;
+  --ink: #20140a;
+  --muted: #6a5748;
+  --line: #d6c8ba;
+  --accent: #b24b22;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 10% -10%, #ffd7a8 0%, transparent 35%),
+    radial-gradient(circle at 90% 0%, #f2c49d 0%, transparent 30%),
+    var(--bg);
+}
+
+.page {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+h1, h2 {
+  margin: 0 0 10px;
+  font-family: 'Space Grotesk', 'IBM Plex Sans', sans-serif;
+}
+
+.muted {
+  color: var(--muted);
+  margin-top: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+
+input,
+select,
+button {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  font: inherit;
+}
+
+button {
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.error {
+  color: #a40000;
+  font-weight: 700;
+}
+
+.status {
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.progressBlock {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #e56a2f, #b24b22);
+  transition: width 0.4s ease;
+}
+
+.progressTrack.indeterminate .progressFill {
+  width: 30%;
+  animation: progress-slide 1.2s linear infinite;
+}
+
+.progressInfo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+@keyframes progress-slide {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+pre {
+  margin: 0;
+  max-height: 260px;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 12px;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.galleryTools {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.dangerBtn {
+  background: #7c1b09;
+}
+
+.card {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.cardTools {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 2;
+}
+
+.toolBtn {
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #00000033;
+  background: #fffffff0;
+  color: #21150b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.toolBtn.deleteOne {
+  background: #4b0f02;
+  color: #fff;
+  border-color: #4b0f02;
+}
+
+.card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  display: block;
+  cursor: zoom-in;
+}
+
+.meta {
+  padding: 8px;
+}
+
+.meta p {
+  margin: 0 0 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logs {
+  max-height: 320px;
+  overflow: auto;
+  background: #130d08;
+  color: #f4d9bc;
+  border-radius: 10px;
+  padding: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.previewOverlay {
+  position: fixed;
+  inset: 0;
+  background: #120a06d9;
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.previewPanel {
+  width: min(1100px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  background: #fff5ea;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  padding: 12px;
+}
+
+.previewPanel header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.previewPanel img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}

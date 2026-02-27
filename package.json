@@ -1,0 +1,36 @@
+{
+  "name": "site-image-crawler",
+  "version": "1.0.0",
+  "description": "Node.js crawler che scarica immagini da un sito fino a una profondità configurabile",
+  "main": "src/crawler.js",
+  "type": "commonjs",
+  "scripts": {
+    "crawl": "node src/crawler.js",
+    "dev:api": "node src/server.js",
+    "dev:web": "vite --config web/vite.config.js",
+    "dev": "concurrently -k \"npm:dev:api\" \"npm:dev:web\"",
+    "build:web": "vite build --config web/vite.config.js",
+    "preview:web": "vite preview --config web/vite.config.js --host 0.0.0.0 --port 6064"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "got": "^14.4.5",
+    "image-size": "^1.1.1",
+    "playwright": "^1.52.0",
+    "express": "^4.21.2",
+    "sharp": "^0.34.4",
+    "tough-cookie": "^5.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.4",
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^25.3.2",
+    "concurrently": "^9.2.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^7.1.7"
+  }
+}
