@@ -30,6 +30,13 @@ function exists(value) {
   return value !== undefined && value !== null && String(value).trim() !== '';
 }
 
+function parseBool(value, fallback = false) {
+  if (value === undefined || value === null || String(value).trim() === '') {
+    return fallback;
+  }
+  return String(value).toLowerCase() === 'true';
+}
+
 function addArg(args, key, value) {
   if (!exists(value)) {
     return;
@@ -233,7 +240,11 @@ async function buildProgress() {
 
 function startCrawler(payload) {
   const args = buildCrawlerArgs(payload);
-  const child = spawn(process.execPath, args, {
+  const useVirtualDisplay = parseBool(payload?.headful, false) && !exists(process.env.DISPLAY);
+  const command = useVirtualDisplay ? 'xvfb-run' : process.execPath;
+  const commandArgs = useVirtualDisplay ? ['-a', process.execPath, ...args] : args;
+
+  const child = spawn(command, commandArgs, {
     cwd: ROOT,
     env: process.env,
     stdio: ['ignore', 'pipe', 'pipe']
@@ -245,7 +256,7 @@ function startCrawler(payload) {
   state.endedAt = null;
   state.exitCode = null;
   state.lastError = null;
-  state.command = [process.execPath, ...args].join(' ');
+  state.command = [command, ...commandArgs].join(' ');
   state.payload = payload;
 
   child.stdout.on('data', (chunk) => {
