@@ -22,7 +22,7 @@ services:
     depends_on:
       - api
     ports:
-      - "6065:80"
+      - "6064:80"
     restart: unless-stopped
     networks:
       - backend
