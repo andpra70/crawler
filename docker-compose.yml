@@ -11,6 +11,7 @@ services:
       - ./data:/app/data
     restart: unless-stopped
     networks:
+      - egress
       - backend
 
   front:
@@ -30,6 +31,8 @@ services:
 
 networks:
   frontend:
+    driver: bridge
+  egress:
     driver: bridge
   backend:
     driver: bridge
