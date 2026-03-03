@@ -179,7 +179,7 @@ export function App() {
     <main className="page">
       <section className="panel">
         <h1>Crawler Console</h1>
-        <p className="muted">UI React/Vite su porta 6064 per avvio ricerca e browsing immagini.</p>
+        <p className="muted">UI React/Vite esposta su porta 6065 con routing verso client e API.</p>
 
         <form className="grid" onSubmit={handleStart}>
           <label>

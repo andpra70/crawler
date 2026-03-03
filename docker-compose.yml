@@ -10,6 +10,9 @@ services:
     volumes:
       - ./data:/app/data
     restart: unless-stopped
+    networks:
+      backend:
+        ipv4_address: 172.29.0.10
 
   front:
     build:
@@ -20,5 +23,15 @@ services:
     depends_on:
       - api
     ports:
-      - "6064:80"
+      - "6065:80"
     restart: unless-stopped
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.29.0.0/24
