@@ -8,6 +8,7 @@ module.exports = defineConfig({
   server: {
     host: '0.0.0.0',
     port: 6064,
+    allowedHosts: ['zanotti.iliadboxos.it'],
     proxy: {
       '/api': 'http://localhost:6065',
       '/images': 'http://localhost:6065'
