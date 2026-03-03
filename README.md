@@ -22,6 +22,11 @@ docker compose up --build
 UI disponibile su:
 - `http://localhost:6064`
 
+Con il compose:
+- `front` espone solo Nginx sulla porta `6064`
+- `api` gira solo sulla rete interna Docker sulla porta `6065`
+- Nginx serve la UI React buildata e gira `/api/*` e `/images/*` verso `api`
+
 Per avvio in background:
 ```bash
 docker compose up --build -d
@@ -32,7 +37,7 @@ Stop:
 docker compose down
 ```
 
-## Avvio Web App (porta 6064)
+## Avvio Web App in locale (porta 6064)
 ```bash
 npm run dev
 ```

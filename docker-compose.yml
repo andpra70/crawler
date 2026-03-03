@@ -1,13 +1,24 @@
 services:
-  crawler-ui:
+  api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: crawler-ui
+      target: api
+    container_name: crawler-api
     environment:
       API_PORT: "6065"
-    ports:
-      - "6064:6064"
     volumes:
       - ./data:/app/data
+    restart: unless-stopped
+
+  front:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+    container_name: crawler-front
+    depends_on:
+      - api
+    ports:
+      - "6064:80"
     restart: unless-stopped
