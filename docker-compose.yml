@@ -12,7 +12,7 @@ services:
     restart: unless-stopped
     networks:
       backend:
-        ipv4_address: 172.29.0.10
+        ipv4_address: 172.30.250.10
 
   front:
     build:
@@ -34,4 +34,4 @@ networks:
     internal: true
     ipam:
       config:
-        - subnet: 172.29.0.0/24
+        - subnet: 172.30.250.0/24
