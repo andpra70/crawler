@@ -59,6 +59,7 @@ function buildCrawlerArgs(payload = {}) {
   addArg(args, 'max-images', payload.maxImages);
   addArg(args, 'max-scrolls', payload.maxScrolls);
   addArg(args, 'headful', payload.headful);
+  addArg(args, 'recompress', payload.recompress);
 
   return args;
 }
@@ -108,6 +109,25 @@ async function listImages() {
 
   files.sort((a, b) => b.mtime.localeCompare(a.mtime));
   return files;
+}
+
+async function deleteAllImages() {
+  await ensureDataPaths();
+  const entries = await fs.readdir(IMAGES_DIR, { withFileTypes: true });
+  let deleted = 0;
+
+  for (const entry of entries) {
+    if (!entry.isFile()) {
+      continue;
+    }
+
+    // Sequential delete keeps the operation simple and the result deterministic.
+    // eslint-disable-next-line no-await-in-loop
+    await fs.unlink(path.join(IMAGES_DIR, entry.name));
+    deleted += 1;
+  }
+
+  return deleted;
 }
 
 function safeImageName(raw) {
@@ -300,6 +320,9 @@ app.post('/api/crawl/start', async (req, res) => {
   }
 
   const payload = req.body || {};
+  if (parseBool(payload.clearImagesBeforeStart, false)) {
+    await deleteAllImages();
+  }
   startCrawler(payload);
   res.json({ ok: true, state: { ...state } });
 });

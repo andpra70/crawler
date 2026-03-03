@@ -11,7 +11,9 @@ const DEFAULT_FORM = {
   sameOrigin: true,
   maxImages: 80,
   maxScrolls: 35,
-  headful: true
+  headful: true,
+  clearImagesBeforeStart: false,
+  recompress: true
 };
 
 async function readJson(url, options = {}) {
@@ -92,6 +94,7 @@ export function App() {
     const imageList = imagesData.images || [];
     setImages(imageList);
     setSelectedImages((prev) => prev.filter((name) => imageList.some((img) => img.name === name)));
+    setPreviewImage((prev) => (prev && imageList.some((img) => img.name === prev.name) ? prev : null));
     setLogs(logsData.logs || []);
   }
 
@@ -238,6 +241,16 @@ export function App() {
           <label className="check">
             <input type="checkbox" checked={form.headful} onChange={(e) => updateField('headful', e.target.checked)} />
             headful browser
+          </label>
+
+          <label className="check">
+            <input type="checkbox" checked={form.clearImagesBeforeStart} onChange={(e) => updateField('clearImagesBeforeStart', e.target.checked)} />
+            cancella immagini prima della ricerca
+          </label>
+
+          <label className="check">
+            <input type="checkbox" checked={form.recompress} onChange={(e) => updateField('recompress', e.target.checked)} />
+            ricompressione immagini
           </label>
 
           <button type="submit" disabled={!canStart || loading}>

@@ -264,7 +264,7 @@ async function recompressImage(buffer, imageType, quality) {
   return { buffer, recompressed: false };
 }
 
-async function downloadImages(imageUrls, client, outputDir, minWidth, quality, log) {
+async function downloadImages(imageUrls, client, outputDir, minWidth, quality, recompressEnabled, log) {
   const downloadedImages = new Set();
   const stats = {
     imagesFound: imageUrls.length,
@@ -298,7 +298,9 @@ async function downloadImages(imageUrls, client, outputDir, minWidth, quality, l
       }
 
       stats.bytesBefore += imageData.buffer.length;
-      const optimized = await recompressImage(imageData.buffer, size.type, quality);
+      const optimized = recompressEnabled
+        ? await recompressImage(imageData.buffer, size.type, quality)
+        : { buffer: imageData.buffer, recompressed: false };
       const outputBuffer = optimized.buffer;
       stats.bytesAfter += outputBuffer.length;
       if (optimized.recompressed) {
@@ -338,6 +340,7 @@ async function run() {
   const maxDepth = Number(args.depth || 2);
   const minWidth = Number(args['min-width'] || process.env.W_MIN || 200);
   const quality = normalizeQuality(args.q || args.quality || process.env.QUALITY || 75, 75);
+  const recompressEnabled = args.recompress === undefined ? true : String(args.recompress).toLowerCase() !== 'false';
   const maxImages = Number(args['max-images'] || 120);
   const maxScrolls = Number(args['max-scrolls'] || 50);
   const headful = args.headful;
@@ -364,7 +367,7 @@ async function run() {
 
   let imagesFound = 0;
   let pinterestStats = null;
-  await log(`RUN start mode=${mode} minWidth=${minWidth} quality=${quality}`);
+  await log(`RUN start mode=${mode} minWidth=${minWidth} quality=${quality} recompress=${recompressEnabled}`);
 
   if (mode === 'pinterest') {
     const collected = await collectPinterestImageUrls({
@@ -379,7 +382,7 @@ async function run() {
     imagesFound = collected.imageUrls.length;
     commonStats.pagesVisited = 1;
     await log(`PINTEREST collected_total=${imagesFound}`);
-    const downloadStats = await downloadImages(collected.imageUrls, client, outputDir, minWidth, quality, log);
+    const downloadStats = await downloadImages(collected.imageUrls, client, outputDir, minWidth, quality, recompressEnabled, log);
     commonStats.imagesSaved = downloadStats.imagesSaved;
     commonStats.imagesSkippedSmall = downloadStats.imagesSkippedSmall;
     commonStats.imagesFailed = downloadStats.imagesFailed;
@@ -431,7 +434,7 @@ async function run() {
     }
 
     imagesFound = discoveredImages.length;
-    const downloadStats = await downloadImages(discoveredImages, client, outputDir, minWidth, quality, log);
+    const downloadStats = await downloadImages(discoveredImages, client, outputDir, minWidth, quality, recompressEnabled, log);
     commonStats.imagesSaved = downloadStats.imagesSaved;
     commonStats.imagesSkippedSmall = downloadStats.imagesSkippedSmall;
     commonStats.imagesFailed = downloadStats.imagesFailed;
@@ -449,6 +452,7 @@ async function run() {
     maxScrolls,
     minWidth,
     quality,
+    recompressEnabled,
     sameOriginOnly,
     finishedAt: new Date().toISOString(),
     pinterestStats,
