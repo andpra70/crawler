@@ -87,6 +87,11 @@ async function readTail(filePath, maxLines) {
   }
 }
 
+async function clearActivityLog() {
+  await ensureDataPaths();
+  await fs.writeFile(ACTIVITY_LOG_PATH, '', 'utf8');
+}
+
 async function listImages() {
   await ensureDataPaths();
   const entries = await fs.readdir(IMAGES_DIR, { withFileTypes: true });
@@ -210,12 +215,12 @@ async function buildProgress() {
       failed += 1;
     }
 
-    const scrollMatch = parsed.message.match(/PINTEREST scroll=\d+\s+collected=(\d+)/);
+    const scrollMatch = parsed.message.match(/(?:PINTEREST|GOOGLE) scroll=\d+\s+collected=(\d+)/);
     if (scrollMatch) {
       collected = Math.max(collected, Number(scrollMatch[1]));
     }
 
-    const totalMatch = parsed.message.match(/PINTEREST collected_total=(\d+)/);
+    const totalMatch = parsed.message.match(/(?:PINTEREST|GOOGLE) collected_total=(\d+)/);
     if (totalMatch) {
       collectedTotal = Math.max(collectedTotal, Number(totalMatch[1]));
     }
@@ -224,7 +229,7 @@ async function buildProgress() {
   const processed = saved + skipped + failed;
   let target = 0;
 
-  if (mode === 'pinterest') {
+  if (mode === 'pinterest' || mode === 'google') {
     target = Number(payload.maxImages || 0);
     if (collectedTotal > 0) {
       target = collectedTotal;
@@ -320,6 +325,7 @@ app.post('/api/crawl/start', async (req, res) => {
   }
 
   const payload = req.body || {};
+  await clearActivityLog();
   if (parseBool(payload.clearImagesBeforeStart, false)) {
     await deleteAllImages();
   }

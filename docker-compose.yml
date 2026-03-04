@@ -7,6 +7,9 @@ services:
     container_name: crawler
     environment:
       API_PORT: "6065"
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     ports:
       - "6064:80"
     volumes:

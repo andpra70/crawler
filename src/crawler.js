@@ -8,7 +8,7 @@ const { URL } = require('node:url');
 const cheerio = require('cheerio');
 const { CookieJar } = require('tough-cookie');
 const imageSize = require('image-size');
-const { collectPinterestImageUrls } = require('./pinterest-driver');
+const { collectPinterestImageUrls, collectGoogleImageUrls } = require('./pinterest-driver');
 let gotClient = null;
 let sharpLib = null;
 
@@ -264,10 +264,9 @@ async function recompressImage(buffer, imageType, quality) {
   return { buffer, recompressed: false };
 }
 
-async function downloadImages(imageUrls, client, outputDir, minWidth, quality, recompressEnabled, log) {
-  const downloadedImages = new Set();
-  const stats = {
-    imagesFound: imageUrls.length,
+function createDownloadStats() {
+  return {
+    imagesFound: 0,
     imagesSaved: 0,
     imagesSkippedSmall: 0,
     imagesFailed: 0,
@@ -275,6 +274,10 @@ async function downloadImages(imageUrls, client, outputDir, minWidth, quality, r
     bytesBefore: 0,
     bytesAfter: 0
   };
+}
+
+async function downloadImages(imageUrls, client, outputDir, minWidth, quality, recompressEnabled, log, downloadedImages = new Set(), stats = createDownloadStats()) {
+  stats.imagesFound += imageUrls.length;
 
   for (const imageUrl of imageUrls) {
     if (downloadedImages.has(imageUrl)) {
@@ -332,8 +335,8 @@ async function run() {
     process.exit(1);
   }
 
-  if (mode === 'pinterest' && !startUrl && !query) {
-    console.error('Uso pinterest: node src/crawler.js --mode pinterest --query \"interior design\" [--max-images 80] [--headful true]');
+  if ((mode === 'pinterest' || mode === 'google') && !startUrl && !query) {
+    console.error('Uso search: node src/crawler.js --mode pinterest|google --query \"interior design\" [--max-images 80] [--headful true]');
     process.exit(1);
   }
 
@@ -367,7 +370,11 @@ async function run() {
 
   let imagesFound = 0;
   let pinterestStats = null;
+  let googleStats = null;
   await log(`RUN start mode=${mode} minWidth=${minWidth} quality=${quality} recompress=${recompressEnabled}`);
+
+  const downloadedImages = new Set();
+  const downloadStats = createDownloadStats();
 
   if (mode === 'pinterest') {
     const collected = await collectPinterestImageUrls({
@@ -376,23 +383,38 @@ async function run() {
       maxImages,
       maxScrolls,
       headful,
-      log
+      log,
+      onBatch: async (batchUrls) => {
+        imagesFound += batchUrls.length;
+        await downloadImages(batchUrls, client, outputDir, minWidth, quality, recompressEnabled, log, downloadedImages, downloadStats);
+      }
     });
     pinterestStats = collected.stats;
-    imagesFound = collected.imageUrls.length;
+    imagesFound = Math.max(imagesFound, collected.imageUrls.length);
     commonStats.pagesVisited = 1;
     await log(`PINTEREST collected_total=${imagesFound}`);
-    const downloadStats = await downloadImages(collected.imageUrls, client, outputDir, minWidth, quality, recompressEnabled, log);
-    commonStats.imagesSaved = downloadStats.imagesSaved;
-    commonStats.imagesSkippedSmall = downloadStats.imagesSkippedSmall;
-    commonStats.imagesFailed = downloadStats.imagesFailed;
-    commonStats.imagesRecompressed = downloadStats.imagesRecompressed;
-    commonStats.bytesBefore = downloadStats.bytesBefore;
-    commonStats.bytesAfter = downloadStats.bytesAfter;
+    await downloadImages(collected.imageUrls, client, outputDir, minWidth, quality, recompressEnabled, log, downloadedImages, downloadStats);
+  } else if (mode === 'google') {
+    const collected = await collectGoogleImageUrls({
+      query,
+      startUrl: startUrl || null,
+      maxImages,
+      maxScrolls,
+      headful,
+      log,
+      onBatch: async (batchUrls) => {
+        imagesFound += batchUrls.length;
+        await downloadImages(batchUrls, client, outputDir, minWidth, quality, recompressEnabled, log, downloadedImages, downloadStats);
+      }
+    });
+    googleStats = collected.stats;
+    imagesFound = Math.max(imagesFound, collected.imageUrls.length);
+    commonStats.pagesVisited = 1;
+    await log(`GOOGLE collected_total=${imagesFound}`);
+    await downloadImages(collected.imageUrls, client, outputDir, minWidth, quality, recompressEnabled, log, downloadedImages, downloadStats);
   } else {
     const queue = [{ url: startUrl, depth: 0 }];
     const visitedPages = new Set();
-    const discoveredImages = [];
 
     while (queue.length > 0) {
       const current = queue.shift();
@@ -418,10 +440,9 @@ async function run() {
       commonStats.pagesVisited += 1;
       const $ = cheerio.load(html);
       const imageUrls = extractImageUrls($, current.url);
-      for (const imgUrl of imageUrls) {
-        discoveredImages.push(imgUrl);
-      }
+      imagesFound += imageUrls.length;
       await log(`SITE discovered page=${current.url} images=${imageUrls.length}`);
+      await downloadImages(imageUrls, client, outputDir, minWidth, quality, recompressEnabled, log, downloadedImages, downloadStats);
 
       if (current.depth < maxDepth) {
         const links = extractLinks($, current.url, sameOriginOnly);
@@ -433,15 +454,14 @@ async function run() {
       }
     }
 
-    imagesFound = discoveredImages.length;
-    const downloadStats = await downloadImages(discoveredImages, client, outputDir, minWidth, quality, recompressEnabled, log);
-    commonStats.imagesSaved = downloadStats.imagesSaved;
-    commonStats.imagesSkippedSmall = downloadStats.imagesSkippedSmall;
-    commonStats.imagesFailed = downloadStats.imagesFailed;
-    commonStats.imagesRecompressed = downloadStats.imagesRecompressed;
-    commonStats.bytesBefore = downloadStats.bytesBefore;
-    commonStats.bytesAfter = downloadStats.bytesAfter;
   }
+
+  commonStats.imagesSaved = downloadStats.imagesSaved;
+  commonStats.imagesSkippedSmall = downloadStats.imagesSkippedSmall;
+  commonStats.imagesFailed = downloadStats.imagesFailed;
+  commonStats.imagesRecompressed = downloadStats.imagesRecompressed;
+  commonStats.bytesBefore = downloadStats.bytesBefore;
+  commonStats.bytesAfter = downloadStats.bytesAfter;
 
   await writeMetadata(reportPath, {
     mode,
@@ -456,6 +476,7 @@ async function run() {
     sameOriginOnly,
     finishedAt: new Date().toISOString(),
     pinterestStats,
+    googleStats,
     stats: {
       ...commonStats,
       imagesFound

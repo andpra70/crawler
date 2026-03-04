@@ -16,6 +16,8 @@ const DEFAULT_FORM = {
   recompress: true
 };
 
+const FORM_STORAGE_KEY = 'crawler.searchForm';
+
 async function readJson(url, options = {}) {
   const res = await fetch(url, options);
   if (!res.ok) {
@@ -69,8 +71,30 @@ function formatDuration(totalSeconds) {
   return `${s}s`;
 }
 
+function loadStoredForm() {
+  if (typeof window === 'undefined') {
+    return DEFAULT_FORM;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(FORM_STORAGE_KEY);
+    if (!raw) {
+      return DEFAULT_FORM;
+    }
+
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return DEFAULT_FORM;
+    }
+
+    return { ...DEFAULT_FORM, ...parsed };
+  } catch {
+    return DEFAULT_FORM;
+  }
+}
+
 export function App() {
-  const [form, setForm] = useState(DEFAULT_FORM);
+  const [form, setForm] = useState(loadStoredForm);
   const [status, setStatus] = useState(null);
   const [report, setReport] = useState(null);
   const [images, setImages] = useState([]);
@@ -115,9 +139,13 @@ export function App() {
     refreshAll().catch((err) => setError(err.message));
     const timer = setInterval(() => {
       refreshAll().catch((err) => setError(err.message));
-    }, 3000);
+    }, running ? 1000 : 3000);
     return () => clearInterval(timer);
-  }, []);
+  }, [running]);
+
+  useEffect(() => {
+    window.localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(form));
+  }, [form]);
 
   async function handleStart(event) {
     event.preventDefault();
@@ -193,15 +221,18 @@ export function App() {
 
   return (
     <main className="page">
-      <section className="panel">
-        <h1>Crawler Console</h1>
-        <p className="muted">UI React/Vite esposta su porta 6064 con routing verso client e API.</p>
+      <section className="panel consolePanel">
+        <div className="consoleHeader">
+          <h1>Crawler Console</h1>
+          <p className="muted">UI React/Vite su porta 6064.</p>
+        </div>
 
         <form className="grid" onSubmit={handleStart}>
           <label>
             Mode
             <select value={form.mode} onChange={(e) => updateField('mode', e.target.value)}>
               <option value="pinterest">pinterest</option>
+              <option value="google">google</option>
               <option value="site">site</option>
             </select>
           </label>
@@ -300,67 +331,61 @@ export function App() {
         </div>
       </section>
 
-      <section className="panel">
-        <h2>Report</h2>
+      <details className="panel collapsible">
+        <summary>Report</summary>
         <pre>{JSON.stringify(report, null, 2)}</pre>
-      </section>
+      </details>
 
-      <section className="panel">
-        <h2>Immagini Scaricate ({images.length})</h2>
+      <details className="panel collapsible">
+        <summary>Activity Log</summary>
+        <div className="logs">
+          {logs.map((line, idx) => (
+            <div key={`${idx}-${line}`}>{line}</div>
+          ))}
+        </div>
+      </details>
+
+      <section className="imageStream">
         <div className="galleryTools">
+          <h2>Immagini Scaricate ({images.length})</h2>
           <span>Selezionate: {selectedImages.length}</span>
           <button type="button" className="dangerBtn" disabled={selectedImages.length === 0 || deleting} onClick={deleteSelectedImages}>
             Cestino: Elimina Selezionate
           </button>
         </div>
-        <div className="galleryViewport">
-          <div className="gallery">
-            {images.map((img, index) => {
-              const mod = index % 11;
-              const variant = mod === 0 ? 'bento-hero' : mod === 3 || mod === 7 ? 'bento-wide' : mod === 5 || mod === 9 ? 'bento-tall' : '';
-              return (
-                <article key={img.name} className={`card ${variant}`.trim()}>
-                  <div className="cardTools">
-                    <button
-                      type="button"
-                      className="toolBtn"
-                      title="Seleziona"
-                      onClick={() => toggleSelectImage(img.name)}
-                    >
-                      {selectedImages.includes(img.name) ? '[v]' : '[ ]'}
-                    </button>
-                    <button
-                      type="button"
-                      className="toolBtn deleteOne"
-                      title="Elimina immagine"
-                      disabled={deleting}
-                      onClick={() => deleteSingleImage(img.name)}
-                    >
-                      [x]
-                    </button>
-                  </div>
-                  <img
-                    src={buildImageUrl(img.name)}
-                    alt={img.name}
-                    loading="lazy"
-                    onDoubleClick={() => setPreviewImage(img)}
-                  />
-                  <div className="meta">
-                    <p title={img.name}>{img.name}</p>
-                    <small>{formatBytes(img.sizeBytes)}</small>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section className="panel">
-        <h2>Activity Log</h2>
-        <div className="logs">
-          {logs.map((line, idx) => (
-            <div key={`${idx}-${line}`}>{line}</div>
+        <div className="imageRail">
+          {images.map((img) => (
+            <article key={img.name} className="imageCard">
+              <div className="cardTools">
+                <button
+                  type="button"
+                  className="toolBtn"
+                  title="Seleziona"
+                  onClick={() => toggleSelectImage(img.name)}
+                >
+                  {selectedImages.includes(img.name) ? '[v]' : '[ ]'}
+                </button>
+                <button
+                  type="button"
+                  className="toolBtn deleteOne"
+                  title="Elimina immagine"
+                  disabled={deleting}
+                  onClick={() => deleteSingleImage(img.name)}
+                >
+                  [x]
+                </button>
+              </div>
+              <img
+                src={buildImageUrl(img.name)}
+                alt={img.name}
+                loading="lazy"
+                onDoubleClick={() => setPreviewImage(img)}
+              />
+              <div className="meta">
+                <p title={img.name}>{img.name}</p>
+                <small>{formatBytes(img.sizeBytes)}</small>
+              </div>
+            </article>
           ))}
         </div>
       </section>
