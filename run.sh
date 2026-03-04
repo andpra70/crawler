@@ -1,5 +1,38 @@
 #!/bin/bash
+set -euo pipefail
 
-#node src/crawler.js --mode pinterest --query "top model legs woman beautiful 80's black and white" --max-images 80 --max-scrolls 35 --min-width 300 --q 70 --headful true
+REGISTRY="${REGISTRY:-docker.io/andpra70}"
+IMAGE_NAME="${IMAGE_NAME:-crawler}"
+TAG="${TAG:-latest}"
+CONTAINER_NAME="${CONTAINER_NAME:-crawler}"
+HOST_PORT="${HOST_PORT:-6064}"
+CONTAINER_PORT="${CONTAINER_PORT:-80}"
+DATA_DIR="${DATA_DIR:-$(pwd)/data}"
 
-npm run dev
+FULL_IMAGE="${REGISTRY}/${IMAGE_NAME}:${TAG}"
+
+mkdir -p "$DATA_DIR"
+
+if docker container inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
+  echo "Stopping existing container: $CONTAINER_NAME"
+  docker stop "$CONTAINER_NAME" >/dev/null
+  docker rm "$CONTAINER_NAME" >/dev/null
+fi
+
+if [[ -n "$REGISTRY" ]]; then
+  echo "Pulling image: $FULL_IMAGE"
+  docker pull "$FULL_IMAGE"
+fi
+
+docker run -d \
+  --name "$CONTAINER_NAME" \
+  -p "${HOST_PORT}:${CONTAINER_PORT}" \
+  -v "${DATA_DIR}:/app/data" \
+  -e API_PORT=6065 \
+  --restart unless-stopped \
+  "$FULL_IMAGE"
+
+echo "Container started successfully."
+echo "Image: $FULL_IMAGE"
+echo "Container: $CONTAINER_NAME"
+echo "URL: http://localhost:${HOST_PORT}"

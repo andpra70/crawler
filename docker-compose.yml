@@ -1,39 +1,14 @@
 services:
-  api:
+  crawler:
     build:
       context: .
       dockerfile: Dockerfile
-      target: api
-    container_name: crawler-api
+    image: docker.io/andpra70/crawler:latest
+    container_name: crawler
     environment:
       API_PORT: "6065"
+    ports:
+      - "6064:80"
     volumes:
       - ./data:/app/data
     restart: unless-stopped
-    networks:
-      - egress
-      - backend
-
-  front:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: web
-    container_name: crawler-front
-    depends_on:
-      - api
-    ports:
-      - "6064:80"
-    restart: unless-stopped
-    networks:
-      - frontend
-      - backend
-
-networks:
-  frontend:
-    driver: bridge
-  egress:
-    driver: bridge
-  backend:
-    driver: bridge
-    internal: true
