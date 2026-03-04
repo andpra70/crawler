@@ -25,6 +25,7 @@ const state = {
   command: null,
   payload: null
 };
+let currentChild = null;
 
 function exists(value) {
   return value !== undefined && value !== null && String(value).trim() !== '';
@@ -274,6 +275,7 @@ function startCrawler(payload) {
     env: process.env,
     stdio: ['ignore', 'pipe', 'pipe']
   });
+  currentChild = child;
 
   state.running = true;
   state.pid = child.pid;
@@ -297,11 +299,31 @@ function startCrawler(payload) {
   });
 
   child.on('close', (code) => {
+    if (currentChild === child) {
+      currentChild = null;
+    }
     state.running = false;
     state.pid = null;
     state.endedAt = new Date().toISOString();
     state.exitCode = code;
   });
+}
+
+function stopCrawler() {
+  if (!currentChild || !state.running) {
+    return false;
+  }
+
+  state.lastError = 'Interrotto manualmente';
+  currentChild.kill('SIGTERM');
+
+  setTimeout(() => {
+    if (currentChild && state.running) {
+      currentChild.kill('SIGKILL');
+    }
+  }, 5000);
+
+  return true;
 }
 
 app.use('/images', express.static(IMAGES_DIR, { maxAge: '5m' }));
@@ -330,6 +352,16 @@ app.post('/api/crawl/start', async (req, res) => {
     await deleteAllImages();
   }
   startCrawler(payload);
+  res.json({ ok: true, state: { ...state } });
+});
+
+app.post('/api/crawl/stop', async (_, res) => {
+  if (!state.running) {
+    res.status(409).json({ ok: false, error: 'Nessun crawler in esecuzione', state: { ...state } });
+    return;
+  }
+
+  stopCrawler();
   res.json({ ok: true, state: { ...state } });
 });
 

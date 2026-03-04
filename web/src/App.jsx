@@ -165,6 +165,21 @@ export function App() {
     }
   }
 
+  async function handleStop() {
+    setLoading(true);
+    setError('');
+    try {
+      await readJson(buildApiUrl('crawl/stop'), {
+        method: 'POST'
+      });
+      await refreshAll();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function updateField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
@@ -221,112 +236,162 @@ export function App() {
 
   return (
     <main className="page">
-      <section className="panel consolePanel">
-        <div className="consoleHeader">
-          <h1>Crawler Console</h1>
-          <p className="muted">UI React/Vite su porta 6064.</p>
-        </div>
-
-        <form className="grid" onSubmit={handleStart}>
-          <label>
-            Mode
-            <select value={form.mode} onChange={(e) => updateField('mode', e.target.value)}>
-              <option value="pinterest">pinterest</option>
-              <option value="google">google</option>
-              <option value="site">site</option>
-            </select>
-          </label>
-
-          <label>
-            URL
-            <input value={form.url} onChange={(e) => updateField('url', e.target.value)} placeholder="https://..." />
-          </label>
-
-          <label>
-            Query
-            <input value={form.query} onChange={(e) => updateField('query', e.target.value)} placeholder="es: travel photography" />
-          </label>
-
-          <label>
-            Depth
-            <input type="number" min="0" value={form.depth} onChange={(e) => updateField('depth', Number(e.target.value))} />
-          </label>
-
-          <label>
-            Min Width
-            <input type="number" min="1" value={form.minWidth} onChange={(e) => updateField('minWidth', Number(e.target.value))} />
-          </label>
-
-          <label>
-            Quality (q)
-            <input type="number" min="1" max="100" value={form.quality} onChange={(e) => updateField('quality', Number(e.target.value))} />
-          </label>
-
-          <label>
-            Max Images
-            <input type="number" min="1" value={form.maxImages} onChange={(e) => updateField('maxImages', Number(e.target.value))} />
-          </label>
-
-          <label>
-            Max Scrolls
-            <input type="number" min="1" value={form.maxScrolls} onChange={(e) => updateField('maxScrolls', Number(e.target.value))} />
-          </label>
-
-          <label>
-            Cookie
-            <input value={form.cookie} onChange={(e) => updateField('cookie', e.target.value)} placeholder="sessionid=...; csrftoken=..." />
-          </label>
-
-          <label className="check">
-            <input type="checkbox" checked={form.sameOrigin} onChange={(e) => updateField('sameOrigin', e.target.checked)} />
-            same-origin
-          </label>
-
-          <label className="check">
-            <input type="checkbox" checked={form.headful} onChange={(e) => updateField('headful', e.target.checked)} />
-            headful browser
-          </label>
-
-          <label className="check">
-            <input type="checkbox" checked={form.clearImagesBeforeStart} onChange={(e) => updateField('clearImagesBeforeStart', e.target.checked)} />
-            cancella immagini prima della ricerca
-          </label>
-
-          <label className="check">
-            <input type="checkbox" checked={form.recompress} onChange={(e) => updateField('recompress', e.target.checked)} />
-            ricompressione immagini
-          </label>
-
-          <button type="submit" disabled={!canStart || loading}>
-            {running ? 'Crawler in esecuzione...' : loading ? 'Avvio...' : 'Avvia Ricerca'}
-          </button>
-        </form>
-
-        {error ? <p className="error">{error}</p> : null}
-
-        <div className="status">
-          <strong>Status:</strong>{' '}
-          {running ? 'RUNNING' : 'IDLE'}
-          {status?.startedAt ? ` | start: ${status.startedAt}` : ''}
-          {status?.endedAt ? ` | end: ${status.endedAt}` : ''}
-          {status?.exitCode !== null && status?.exitCode !== undefined ? ` | code: ${status.exitCode}` : ''}
-        </div>
-
-        <div className="progressBlock">
-          <div className={`progressTrack ${progressPercent === null ? 'indeterminate' : ''}`}>
-            <div
-              className="progressFill"
-              style={{ width: `${progressPercent === null ? 25 : progressPercent}%` }}
-            />
+      <section className="panel consolePanel card border-0">
+        <div className="card-body p-3 p-lg-4">
+          <div className="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-2 mb-3">
+            <div>
+              <h1 className="mb-1">Crawler Console</h1>
+              <p className="muted">UI React/Vite su porta 6064.</p>
+            </div>
           </div>
-          <div className="progressInfo">
-            <span>Progresso: {progressPercent === null ? 'calcolo...' : `${progressPercent}%`}</span>
-            <span>ETA: {running ? formatDuration(progress?.etaSec) : '-'}</span>
-            <span>Elapsed: {formatDuration(progress?.elapsedSec)}</span>
-            <span>
-              Processate: {progress?.processed ?? 0}
-              {progress?.target ? ` / ${progress.target}` : ''}
-            </span>
+
+          <form className="consoleForm" onSubmit={handleStart}>
+            <div className="row g-3">
+              <div className="col-12">
+                <div className="consoleGroup h-100">
+                  <p className="groupTitle">Source</p>
+                  <div className="row g-2">
+                    <div className="col-12 col-md-4 col-xl-2">
+                      <label className="form-label">Mode</label>
+                      <select className="form-select form-select-sm" value={form.mode} onChange={(e) => updateField('mode', e.target.value)}>
+                        <option value="pinterest">pinterest</option>
+                        <option value="google">google</option>
+                        <option value="site">site</option>
+                      </select>
+                    </div>
+
+                    <div className="col-12 col-md-8 col-xl-4">
+                      <label className="form-label">URL</label>
+                      <input className="form-control form-control-sm" value={form.url} onChange={(e) => updateField('url', e.target.value)} placeholder="https://..." />
+                    </div>
+
+                    <div className="col-12 col-md-6 col-xl-3">
+                      <label className="form-label">Query</label>
+                      <input className="form-control form-control-sm" value={form.query} onChange={(e) => updateField('query', e.target.value)} placeholder="es: travel photography" />
+                    </div>
+
+                    <div className="col-12 col-md-6 col-xl-3">
+                      <label className="form-label">Cookie</label>
+                      <input className="form-control form-control-sm" value={form.cookie} onChange={(e) => updateField('cookie', e.target.value)} placeholder="sessionid=...; csrftoken=..." />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-12 col-xl-7">
+                <div className="consoleGroup h-100">
+                  <p className="groupTitle">Limits</p>
+                  <div className="row g-2">
+                    <div className="col-6 col-md-4 col-xl">
+                      <label className="form-label">Depth</label>
+                      <input className="form-control form-control-sm" type="number" min="0" value={form.depth} onChange={(e) => updateField('depth', Number(e.target.value))} />
+                    </div>
+
+                    <div className="col-6 col-md-4 col-xl">
+                      <label className="form-label">Min Width</label>
+                      <input className="form-control form-control-sm" type="number" min="1" value={form.minWidth} onChange={(e) => updateField('minWidth', Number(e.target.value))} />
+                    </div>
+
+                    <div className="col-6 col-md-4 col-xl">
+                      <label className="form-label">Quality</label>
+                      <input className="form-control form-control-sm" type="number" min="1" max="100" value={form.quality} onChange={(e) => updateField('quality', Number(e.target.value))} />
+                    </div>
+
+                    <div className="col-6 col-md-6 col-xl">
+                      <label className="form-label">Max Images</label>
+                      <input className="form-control form-control-sm" type="number" min="1" value={form.maxImages} onChange={(e) => updateField('maxImages', Number(e.target.value))} />
+                    </div>
+
+                    <div className="col-6 col-md-6 col-xl">
+                      <label className="form-label">Max Scrolls</label>
+                      <input className="form-control form-control-sm" type="number" min="1" value={form.maxScrolls} onChange={(e) => updateField('maxScrolls', Number(e.target.value))} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-12 col-xl-5">
+                <div className="consoleGroup h-100">
+                  <p className="groupTitle">Options</p>
+                  <div className="row g-2">
+                    <div className="col-12 col-sm-6">
+                      <div className="form-check">
+                        <input className="form-check-input" id="sameOrigin" type="checkbox" checked={form.sameOrigin} onChange={(e) => updateField('sameOrigin', e.target.checked)} />
+                        <label className="form-check-label" htmlFor="sameOrigin">same-origin</label>
+                      </div>
+                    </div>
+
+                    <div className="col-12 col-sm-6">
+                      <div className="form-check">
+                        <input className="form-check-input" id="headful" type="checkbox" checked={form.headful} onChange={(e) => updateField('headful', e.target.checked)} />
+                        <label className="form-check-label" htmlFor="headful">headful browser</label>
+                      </div>
+                    </div>
+
+                    <div className="col-12">
+                      <div className="form-check">
+                        <input className="form-check-input" id="clearImagesBeforeStart" type="checkbox" checked={form.clearImagesBeforeStart} onChange={(e) => updateField('clearImagesBeforeStart', e.target.checked)} />
+                        <label className="form-check-label" htmlFor="clearImagesBeforeStart">cancella immagini prima della ricerca</label>
+                      </div>
+                    </div>
+
+                    <div className="col-12">
+                      <div className="form-check">
+                        <input className="form-check-input" id="recompress" type="checkbox" checked={form.recompress} onChange={(e) => updateField('recompress', e.target.checked)} />
+                        <label className="form-check-label" htmlFor="recompress">ricompressione immagini</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-12 col-xl-8">
+                <div className="consoleGroup h-100">
+                  <p className="groupTitle">Status</p>
+                  <div className="status">
+                    <strong>Status:</strong>{' '}
+                    {running ? 'RUNNING' : 'IDLE'}
+                    {status?.startedAt ? ` | start: ${status.startedAt}` : ''}
+                    {status?.endedAt ? ` | end: ${status.endedAt}` : ''}
+                    {status?.exitCode !== null && status?.exitCode !== undefined ? ` | code: ${status.exitCode}` : ''}
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-12 col-xl-4">
+                <div className="consoleGroup h-100">
+                  <p className="groupTitle">Actions</p>
+                  <div className="d-grid gap-2 d-sm-flex justify-content-sm-end">
+                    <button className="btn btn-dark btn-sm" type="submit" disabled={!canStart || loading}>
+                      {running ? 'Crawler in esecuzione...' : loading ? 'Avvio...' : 'Avvia Ricerca'}
+                    </button>
+                    <button className="btn btn-outline-dark btn-sm" type="button" disabled={!running || loading} onClick={handleStop}>
+                      Stop
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          {error ? <p className="error mt-2 mb-0">{error}</p> : null}
+
+          <div className="progressBlock mt-3">
+            <div className={`progressTrack ${progressPercent === null ? 'indeterminate' : ''}`}>
+              <div
+                className="progressFill"
+                style={{ width: `${progressPercent === null ? 25 : progressPercent}%` }}
+              />
+            </div>
+            <div className="progressInfo">
+              <span>Progresso: {progressPercent === null ? 'calcolo...' : `${progressPercent}%`}</span>
+              <span>ETA: {running ? formatDuration(progress?.etaSec) : '-'}</span>
+              <span>Elapsed: {formatDuration(progress?.elapsedSec)}</span>
+              <span>
+                Processate: {progress?.processed ?? 0}
+                {progress?.target ? ` / ${progress.target}` : ''}
+              </span>
+            </div>
           </div>
         </div>
       </section>

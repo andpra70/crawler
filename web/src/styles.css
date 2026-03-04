@@ -20,29 +20,50 @@ body {
 }
 
 .page {
-  max-width: 1500px;
+  width: 100%;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 12px;
+  padding: 10px;
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
-  padding: 10px 12px;
+  padding: 8px 10px;
+  min-width: 0;
 }
 
-.consolePanel {
+.consoleGroup {
   display: grid;
-  gap: 8px;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  background: #fcfcfc;
+  min-width: 0;
 }
 
-.consoleHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
+.consoleForm .row {
+  --bs-gutter-x: 0.5rem;
+  --bs-gutter-y: 0.5rem;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.consoleForm .row > * {
+  min-width: 0;
+  padding-left: calc(var(--bs-gutter-x) * 0.5);
+  padding-right: calc(var(--bs-gutter-x) * 0.5);
+}
+
+.groupTitle {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .collapsible {
@@ -77,49 +98,34 @@ h1, h2 {
 }
 
 h1 {
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 h2 {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .muted {
   color: var(--muted);
   margin-top: 0;
   margin-bottom: 0;
-  font-size: 12px;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 6px 8px;
-  align-items: end;
-}
-
-label {
-  display: grid;
-  gap: 2px;
   font-size: 11px;
+}
+
+.form-label,
+.form-check-label {
+  font-size: 10px;
   color: var(--muted);
 }
 
-input,
-select,
-button {
+.form-control,
+.form-select {
   border: 1px solid var(--line);
-  padding: 5px 6px;
-  font: inherit;
-  background: #fff;
+  padding: 4px 5px;
   color: var(--ink);
-}
-
-button {
-  background: var(--accent);
-  color: #fff;
-  cursor: pointer;
-  font-weight: 700;
+  border-radius: 0;
+  max-width: 100%;
+  font-size: 12px;
 }
 
 button:disabled {
@@ -127,11 +133,9 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.check {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 30px;
+.form-check {
+  min-height: 24px;
+  margin-bottom: 0;
 }
 
 .error {
@@ -140,7 +144,10 @@ button:disabled {
 }
 
 .status {
-  font-size: 11px;
+  font-size: 10px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 .progressBlock {
@@ -170,8 +177,8 @@ button:disabled {
 .progressInfo {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  font-size: 11px;
+  gap: 6px;
+  font-size: 10px;
   color: var(--muted);
 }
 
@@ -198,10 +205,11 @@ pre {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-  font-size: 11px;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 10px;
   color: var(--muted);
+  min-width: 0;
 }
 
 .galleryTools h2 {
@@ -214,20 +222,24 @@ pre {
 
 .imageStream {
   display: grid;
-  gap: 8px;
+  gap: 6px;
+  width: min(92%, 1180px);
+  margin: 0 auto;
+  min-width: 0;
 }
 
 .imageRail {
-  column-count: 4;
-  column-gap: 10px;
+  column-count: 3;
+  column-gap: 8px;
 }
 
 .imageCard {
   position: relative;
   display: inline-block;
   width: 100%;
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   break-inside: avoid;
+  min-width: 0;
 }
 
 .cardTools {
@@ -241,11 +253,11 @@ pre {
 }
 
 .toolBtn {
-  padding: 3px 6px;
+  padding: 2px 5px;
   border: 1px solid #bdbdbd;
   background: #ffffffeb;
   color: #111;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
 }
 
@@ -269,14 +281,14 @@ pre {
 
 .meta p {
   margin: 0 0 2px;
-  font-size: 11px;
+  font-size: 10px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .meta small {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--muted);
 }
 
@@ -327,8 +339,25 @@ pre {
 }
 
 @media (max-width: 720px) {
+  .page {
+    padding: 6px;
+  }
+
+  .consoleGroup {
+    padding: 6px;
+  }
+
+  .consoleForm .row {
+    --bs-gutter-x: 0.375rem;
+    --bs-gutter-y: 0.375rem;
+  }
+
   .imageRail {
     column-count: 1;
+  }
+
+  .imageStream {
+    width: 100%;
   }
 
   .galleryTools {
@@ -338,11 +367,6 @@ pre {
   .galleryTools h2 {
     margin-right: 0;
     width: 100%;
-  }
-
-  .consoleHeader {
-    display: grid;
-    gap: 4px;
   }
 }
 
