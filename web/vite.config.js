@@ -4,6 +4,7 @@ const react = require('@vitejs/plugin-react');
 
 module.exports = defineConfig({
   root: path.resolve(__dirname),
+  base: './',
   plugins: [react()],
   server: {
     host: '0.0.0.0',

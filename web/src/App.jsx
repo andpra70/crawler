@@ -25,6 +25,19 @@ async function readJson(url, options = {}) {
   return res.json();
 }
 
+function buildAppUrl(relativePath) {
+  const normalizedPath = String(relativePath || '').replace(/^\/+/, '');
+  return new URL(normalizedPath, document.baseURI).toString();
+}
+
+function buildApiUrl(relativePath) {
+  return buildAppUrl(`api/${String(relativePath || '').replace(/^\/+/, '')}`);
+}
+
+function buildImageUrl(name) {
+  return buildAppUrl(`images/${encodeURIComponent(name)}`);
+}
+
 function formatBytes(value) {
   if (!value && value !== 0) {
     return '-';
@@ -83,10 +96,10 @@ export function App() {
 
   async function refreshAll() {
     const [statusData, reportData, imagesData, logsData] = await Promise.all([
-      readJson('/api/crawl/status'),
-      readJson('/api/report'),
-      readJson('/api/images'),
-      readJson('/api/logs?lines=250')
+      readJson(buildApiUrl('crawl/status')),
+      readJson(buildApiUrl('report')),
+      readJson(buildApiUrl('images')),
+      readJson(buildApiUrl('logs?lines=250'))
     ]);
 
     setStatus(statusData);
@@ -111,7 +124,7 @@ export function App() {
     setLoading(true);
     setError('');
     try {
-      await readJson('/api/crawl/start', {
+      await readJson(buildApiUrl('crawl/start'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(form)
@@ -141,7 +154,7 @@ export function App() {
     setDeleting(true);
     setError('');
     try {
-      await readJson('/api/images/delete-batch', {
+      await readJson(buildApiUrl('images/delete-batch'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ names: [name] })
@@ -163,7 +176,7 @@ export function App() {
     setDeleting(true);
     setError('');
     try {
-      await readJson('/api/images/delete-batch', {
+      await readJson(buildApiUrl('images/delete-batch'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ names: selectedImages })
@@ -327,7 +340,7 @@ export function App() {
                     </button>
                   </div>
                   <img
-                    src={img.url}
+                    src={buildImageUrl(img.name)}
                     alt={img.name}
                     loading="lazy"
                     onDoubleClick={() => setPreviewImage(img)}
@@ -359,7 +372,7 @@ export function App() {
               <strong>{previewImage.name}</strong>
               <button type="button" onClick={() => setPreviewImage(null)}>Chiudi</button>
             </header>
-            <img src={previewImage.url} alt={previewImage.name} />
+            <img src={buildImageUrl(previewImage.name)} alt={previewImage.name} />
           </article>
         </section>
       ) : null}
